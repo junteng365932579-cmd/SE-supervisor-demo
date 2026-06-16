@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SE督导工具 · 原型</title>
+<style>
+  :root {
+    --sage: #4a7c6f;
+    --sage-light: #e8f0ee;
+    --sage-mid: #a8c5bd;
+    --warm: #c4773b;
+    --warm-light: #f5ede3;
+    --ink: #1e2820;
+    --ink-mid: #4a5450;
+    --ink-soft: #8a9490;
+    --surface: #f7f8f6;
+    --white: #ffffff;
+    --border: #dde5e2;
+    --purple: #6b5ea8;
+    --purple-light: #eeecf8;
+    --radius: 12px;
+    --radius-sm: 7px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* 顶部导航 */
+  .nav {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--sage);
+    margin-right: 32px;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-brand::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--sage);
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 0;
+    height: 100%;
+  }
+  .nav-tab {
+    padding: 0 18px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--ink-soft);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .nav-tab.active {
+    color: var(--sage);
+    border-bottom-color: var(--sage);
+    font-weight: 500;
+  }
+  .nav-tab:hover:not(.active) { color: var(--ink-mid); }
+  .nav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--sage-light);
+    border: 1.5px solid var(--sage-mid);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--sage);
+  }
+  .role-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .role-badge.teacher { background: var(--warm-light); color: var(--warm); }
+  .role-badge.student { background: var(--sage-light); color: var(--sage); }
+
+  /* 视图切换 */
+  .view { display: none; padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  /* 通用卡片 */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-mid);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .card-title::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: var(--sage);
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  /* =========== 视图1：学员提交 =========== */
+  .submit-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .submit-header {
+    margin-bottom: 20px;
+  }
+  .submit-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .submit-header p { color: var(--ink-soft); font-size: 13px; }
+
+  .session-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .meta-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .meta-field select, .meta-field input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--white);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .meta-field select:focus, .meta-field input:focus { border-color: var(--sage); }
+
+  .sibam-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .sibam-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .sibam-item:hover { border-color: var(--sage-mid); background: var(--sage-light); }
+  .sibam-item.filled { border-color: var(--sage-mid); background: var(--sage-light); }
+  .sibam-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--sage);
+    margin-bottom: 4px;
+  }
+  .sibam-name { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .sibam-input {
+    width: 100%;
+    border: none;
+    background: none;
+    font-size: 12px;
+    color: var(--ink-mid);
+    resize: none;
+    height: 52px;
+    font-family: inherit;
+    outline: none;
+    line-height: 1.5;
+  }
+  .sibam-input::placeholder { color: var(--ink-soft); }
+
+  .free-text-area {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-size: 13px;
+    color: var(--ink);
+    resize: none;
+    height: 100px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    line-height: 1.6;
+  }
+  .free-text-area:focus { border-color: var(--sage); }
+  .free-text-area::placeholder { color: var(--ink-soft); }
+
+  .submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--sage);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+    margin-top: 4px;
+  }
+  .submit-btn:hover { opacity: 0.88; }
+
+  /* 右侧提示面板 */
+  .hint-card {
+    background: var(--sage-light);
+    border: 1px solid var(--sage-mid);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .hint-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sage);
+    margin-bottom: 10px;
+    letter-spacing: 0.2px;
+  }
+  .hint-list { list-style: none; }
+  .hint-list li {
+    font-size: 12px;
+    color: var(--ink-mid);
+    padding: 4px 0;
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .hint-list li::before {
+    content: '·';
+    position: absolute;
+    left: 4px;
+    color: var(--sage);
+    font-weight: bold;
+  }
+
+  .progress-bar-wrap { margin-bottom: 14px; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--sage);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  /* =========== 视图2：AI分析结果 =========== */
+  .analysis-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .ns-gauge {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .ns-zone {
+    flex: 1;
+    padding: 10px 8px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1.5px solid transparent;
+  }
+  .ns-zone.hyper { background: #fef2f0; color: #c0392b; border-color: #f5b8b0; }
+  .ns-zone.window { background: var(--sage-light); color: var(--sage); border-color: var(--sage-mid); }
+  .ns-zone.hypo { background: #eef2fb; color: #3b5ea8; border-color: #b0c0f0; }
+  .ns-zone.active { transform: scale(1.04); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .ns-zone .zone-label { font-size: 10px; opacity: 0.7; margin-top: 2px; font-weight: 400; }
+
+  .sibam-analysis {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .sa-item {
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+  }
+  .sa-letter {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--sage);
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .sa-name { font-size: 10px; color: var(--ink-soft); margin-bottom: 6px; }
+  .sa-content { font-size: 12px; color: var(--ink-mid); line-height: 1.5; }
+  .sa-missing { font-size: 11px; color: var(--ink-soft); font-style: italic; }
+
+  .strength-tag, .grow-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    margin: 3px 3px 3px 0;
+  }
+  .strength-tag { background: var(--sage-light); color: var(--sage); }
+  .grow-tag { background: var(--warm-light); color: var(--warm); }
+
+  .ai-note {
+    font-size: 12px;
+    color: var(--ink-mid);
+    line-height: 1.7;
+    border-left: 3px solid var(--sage-mid);
+    padding-left: 12px;
+    margin-top: 10px;
+  }
+
+  .supervisor-note-area {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--ink);
+    resize: none;
+    height: 80px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .supervisor-note-area:focus { border-color: var(--warm); }
+  .save-note-btn {
+    padding: 7px 16px;
+    background: var(--warm);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .save-note-btn:hover { opacity: 0.85; }
+
+  /* =========== 视图3：学员总览（督导视角） =========== */
+  .overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .overview-header h2 { font-size: 18px; font-weight: 600; }
+  .filter-row { display: flex; gap: 8px; }
+  .filter-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--ink-mid);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .filter-btn.active { background: var(--sage); color: white; border-color: var(--sage); }
+
+  .students-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .student-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .student-card:hover { border-color: var(--sage-mid); box-shadow: 0 2px 10px rgba(74,124,111,0.08); }
+  .student-card.flagged { border-left: 3px solid var(--warm); }
+
+  .student-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .student-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--sage-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--sage);
+    flex-shrink: 0;
+  }
+  .student-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .student-sessions { font-size: 11px; color: var(--ink-soft); }
+
+  .mini-trend {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+    align-items: flex-end;
+    height: 28px;
+  }
+  .trend-bar {
+    flex: 1;
+    border-radius: 2px;
+    background: var(--sage-mid);
+    transition: height 0.3s;
+  }
+
+  .student-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+  .s-tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .s-tag.strength { background: var(--sage-light); color: var(--sage); }
+  .s-tag.grow { background: var(--warm-light); color: var(--warm); }
+  .s-tag.attn { background: #fef2f0; color: #c0392b; }
+
+  .student-last {
+    font-size: 11px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+  .student-last span { color: var(--ink-mid); }
+
+  /* 案例库 */
+  .case-library {
+    margin-top: 4px;
+  }
+  .case-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .case-badge {
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .case-badge.freeze { background: #eef2fb; color: #3b5ea8; }
+  .case-badge.resource { background: var(--sage-light); color: var(--sage); }
+  .case-badge.pendulate { background: var(--purple-light); color: var(--purple); }
+
+  .case-content { flex: 1; }
+  .case-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .case-desc { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+  .case-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .case-action {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    cursor: pointer;
+    color: var(--ink-mid);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .case-action:hover { border-color: var(--sage); color: var(--sage); }
+  .case-action.primary { background: var(--sage-light); border-color: var(--sage-mid); color: var(--sage); }
+
+  /* 成功提示 */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ink);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    transition: transform 0.3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* 标签小组件 */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    margin-top: 14px;
+  }
+
+  @media (max-width: 768px) {
+    .submit-layout, .analysis-layout, .students-grid { grid-template-columns: 1fr; }
+    .sibam-grid, .sibam-analysis { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">体感督导</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchView('submit', this)">提交记录</button>
+    <button class="nav-tab" onclick="switchView('analysis', this)">AI分析</button>
+    <button class="nav-tab" onclick="switchView('overview', this)">督导总览</button>
+    <button class="nav-tab" onclick="switchView('library', this)">案例库</button>
+  </div>
+  <div class="nav-right">
+    <div class="role-badge student" id="role-badge">学员视角</div>
+    <button onclick="toggleRole()" style="padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:white;font-size:11px;cursor:pointer;font-family:inherit;color:var(--ink-mid);">切换角色</button>
+    <div class="avatar">李</div>
+  </div>
+</nav>
+
+<!-- 视图1：学员提交记录 -->
+<div class="view active" id="view-submit">
+  <div class="submit-header">
+    <h2>记录本次会谈觉察</h2>
+    <p>描述你在练习/会谈中的真实身体感受，不需要"正确答案"</p>
+  </div>
+  <div class="submit-layout">
+    <div>
+      <div class="card">
+        <div class="card-title">会谈基本信息</div>
+        <div class="session-meta">
+          <div class="meta-field">
+            <label>会谈类型</label>
+            <select>
+              <option>一对一练习</option>
+              <option>小组工作坊</option>
+              <option>自我练习</option>
+            </select>
+          </div>
+          <div class="meta-field">
+            <label>今日日期</label>
+            <input type="date" value="2025-06-16">
+          </div>
+          <div class="meta-field">
+            <label>练习阶段</label>
+            <select>
+              <option>资源化</option>
+              <option>钟摆技术</option>
+              <option>定向与完成</option>
+              <option>整合</option>
+            </select>
+          </div>
+          <div class="meta-field">
+            <label>整体感受强度</label>
+            <select>
+              <option>轻微</option>
+              <option selected>中等</option>
+              <option>较强</option>
+              <option>很强</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card-title">SIBAM 身体觉察（填写你注意到的）</div>
+        <div class="sibam-grid">
+          <div class="sibam-item filled">
+            <div class="sibam-label">S</div>
+            <div class="sibam-name">Sensation · 身体感觉</div>
+            <textarea class="sibam-input" placeholder="胸口、腹部、手脚……有什么感觉？">胸口有些紧，呼吸稍浅，肩膀沉。当我把注意力放到脚底时，感觉脚底有温热感，紧张稍微松了一点。</textarea>
+          </div>
+          <div class="sibam-item filled">
+            <div class="sibam-label">I</div>
+            <div class="sibam-name">Image · 意象</div>
+            <textarea class="sibam-input" placeholder="脑海中浮现什么画面或颜色？">一开始看到灰色的空间，慢慢变成了有阳光的地方，不确定是否有意义。</textarea>
+          </div>
+          <div class="sibam-item filled">
+            <div class="sibam-label">B</div>
+            <div class="sibam-name">Behavior · 行为冲动</div>
+            <textarea class="sibam-input" placeholder="身体想做什么动作？">有想往后靠的冲动，之后做了深呼吸，感觉肩膀稍微落下来了。</textarea>
+          </div>
+          <div class="sibam-item">
+            <div class="sibam-label">A</div>
+            <div class="sibam-name">Affect · 情绪</div>
+            <textarea class="sibam-input" placeholder="有什么情绪涌现？怎么流动的？">开始有点焦虑，后来变得平静，但不确定这个平静是真实的还是压制的。</textarea>
+          </div>
+          <div class="sibam-item" style="grid-column: span 2;">
+            <div class="sibam-label">M</div>
+            <div class="sibam-name">Meaning · 意义</div>
+            <textarea class="sibam-input" placeholder="这个体验对你意味着什么？" style="height:36px;">感觉身体比之前"听话"了一点点，但还不确定怎么引导来访者做同样的事。</textarea>
+          </div>
+        </div>
+
+        <div class="section-label">补充观察（自由描述）</div>
+        <textarea class="free-text-area" placeholder="有什么让你困惑、或印象深刻的时刻？可以是来访者的反应，也可以是你自己的状态……">在钟摆练习的时候，来访者突然说"感觉脑子空了"——我当时不确定这是解离还是真正的平静，我选择暂停了一下但不知道做得对不对。</textarea>
+
+        <button class="submit-btn" onclick="submitRecord()">提交记录</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="hint-card">
+        <div class="hint-title">觉察提示：身体语言词汇</div>
+        <ul class="hint-list">
+          <li>温度：温热、凉意、发烫、冰冷</li>
+          <li>质地：紧绷、柔软、沉重、轻盈</li>
+          <li>流动：流动感、堵塞、扩散、收缩</li>
+          <li>位置：中心、边缘、深层、表面</li>
+          <li>节奏：脉动、颤抖、平稳、波动</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">我的本月进展</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label"><span>S - 感觉追踪</span><span>82%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:82%"></div></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label"><span>I - 意象识别</span><span>55%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label"><span>B - 行为觉察</span><span>68%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:68%"></div></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label"><span>A - 情绪流动</span><span>45%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:45%"></div></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label"><span>M - 意义构建</span><span>38%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:38%"></div></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:3px solid var(--sage);">
+        <div class="card-title">督导老师的上次批注</div>
+        <p style="font-size:12px;color:var(--ink-mid);line-height:1.7;">李同学对身体感觉（S维度）的描述越来越精准，特别是能注意到感觉的"质地"变化。建议下次尝试在情绪涌现时多停留一下，观察情绪在身体哪个部位有对应感觉。</p>
+        <p style="font-size:11px;color:var(--ink-soft);margin-top:8px;">— 张老师，2025年6月10日</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 视图2：AI分析结果 -->
+<div class="view" id="view-analysis">
+  <div class="submit-header">
+    <h2>本次记录分析</h2>
+    <p>学员：李心怡 · 第8次记录 · 2025年6月16日</p>
+  </div>
+  <div class="analysis-layout">
+    <div>
+      <div class="card">
+        <div class="card-title">神经系统状态判断</div>
+        <div class="ns-gauge">
+          <div class="ns-zone hyper">过激活<div class="zone-label">焦虑·惊恐</div></div>
+          <div class="ns-zone window active">耐受窗口 ✓<div class="zone-label">当前状态</div></div>
+          <div class="ns-zone hypo">低激活<div class="zone-label">麻木·解离</div></div>
+        </div>
+        <div class="ai-note">
+          本次记录显示学员在练习初期有轻度交感激活（胸口紧、呼吸浅），但通过自主将注意力转移到脚底，成功完成了初步的自我调节，进入耐受窗口。这是调节能力发展的积极信号。
+        </div>
+        <div class="ai-note" style="border-color:#e8a87c;margin-top:8px;">
+          ⚠ 注意：学员提到对来访者"脑子空了"的判断困惑（解离 vs 平静），建议督导重点处理这一辨别能力。
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">SIBAM 维度分析</div>
+        <div class="sibam-analysis">
+          <div class="sa-item" style="border-color:var(--sage-mid);background:var(--sage-light)">
+            <div class="sa-letter">S</div>
+            <div class="sa-name">Sensation · 感觉</div>
+            <div class="sa-content">精确描述了胸口紧、肩膀沉、脚底温热感，并追踪到感觉随注意力转移的变化。<strong>质量：高</strong></div>
+          </div>
+          <div class="sa-item">
+            <div class="sa-letter">I</div>
+            <div class="sa-name">Image · 意象</div>
+            <div class="sa-content">出现了意象（灰色→阳光），但学员本人对其意义不确定。意象的自我评估能力待发展。</div>
+          </div>
+          <div class="sa-item">
+            <div class="sa-letter">B</div>
+            <div class="sa-name">Behavior · 行为</div>
+            <div class="sa-content">识别到"往后靠"的冲动，并允许深呼吸发生。行为觉察与允许能力均有体现。</div>
+          </div>
+          <div class="sa-item" style="border-color:#e8c4a0;background:#fef7f0">
+            <div class="sa-letter">A</div>
+            <div class="sa-name">Affect · 情绪</div>
+            <div class="sa-content">能识别焦虑→平静的转变，但对平静的真实性有疑问——这个元觉察本身值得关注。</div>
+          </div>
+          <div class="sa-item" style="grid-column:span 2;border-color:#ddd;background:#fafafa">
+            <div class="sa-letter">M</div>
+            <div class="sa-name">Meaning · 意义</div>
+            <div class="sa-content">意义层面仍处于早期——能感受到"身体比之前听话了"，但尚未形成更深的整合性理解。这是成长空间。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">能力发展评估</div>
+        <div class="section-label">本次突出表现</div>
+        <div>
+          <span class="strength-tag">感觉追踪精准</span>
+          <span class="strength-tag">自主调节尝试</span>
+          <span class="strength-tag">不确定性耐受↑</span>
+          <span class="strength-tag">元觉察出现</span>
+        </div>
+        <div class="section-label" style="margin-top:14px;">建议督导关注</div>
+        <div>
+          <span class="grow-tag">解离识别能力</span>
+          <span class="grow-tag">意象整合</span>
+          <span class="grow-tag">M维度深化</span>
+        </div>
+        <div class="ai-note" style="margin-top:14px;">
+          与上次记录相比：S维度描述词汇量增加40%，首次出现对自身平静状态的质疑（元觉察），说明觉察层次在加深。情绪（A）和意义（M）维度仍是主要成长空间。
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">督导批注</div>
+        <textarea class="supervisor-note-area" placeholder="在这里添加你的督导反馈，学员可以看到……">关于"脑子空了"的辨别：解离通常伴随眼神涣散、说话变慢、对外界刺激反应减弱；而真正的平静往往身体更有重量感、呼吸更深。建议下次直接问来访者"脚底还能感觉到地板吗？"来快速测试。</textarea>
+        <button class="save-note-btn" onclick="saveNote()">保存批注</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);margin-top:8px;cursor:pointer;">
+          <input type="checkbox" checked> 同时推荐为教学案例
+        </label>
+      </div>
+
+      <div class="card" style="border-left:3px solid var(--purple);">
+        <div class="card-title">关键词云</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+          <span style="font-size:18px;font-weight:700;color:var(--sage)">胸口紧</span>
+          <span style="font-size:13px;color:var(--ink-mid)">肩膀沉</span>
+          <span style="font-size:15px;font-weight:600;color:var(--sage)">脚底温热</span>
+          <span style="font-size:12px;color:var(--ink-soft)">灰色空间</span>
+          <span style="font-size:14px;color:var(--purple)">钟摆</span>
+          <span style="font-size:11px;color:var(--ink-soft)">往后靠</span>
+          <span style="font-size:16px;font-weight:600;color:var(--warm)">解离辨别</span>
+          <span style="font-size:12px;color:var(--ink-mid)">深呼吸</span>
+          <span style="font-size:13px;color:var(--sage)">耐受窗口</span>
+          <span style="font-size:11px;color:var(--ink-soft)">元觉察</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 视图3：督导总览 -->
+<div class="view" id="view-overview">
+  <div class="overview-header">
+    <div>
+      <h2>学员总览</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin-top:2px;">2025年6月 · 当前批次 9名学员</p>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active">全部</button>
+      <button class="filter-btn">需关注</button>
+      <button class="filter-btn">进展显著</button>
+    </div>
+  </div>
+
+  <div class="students-grid">
+    <!-- 学员1 -->
+    <div class="student-card flagged" onclick="switchView('analysis', document.querySelectorAll('.nav-tab')[1])">
+      <div class="student-top">
+        <div class="student-avatar">李</div>
+        <div><div class="student-name">李心怡</div><div class="student-sessions">已提交 8次</div></div>
+      </div>
+      <div class="mini-trend">
+        <div class="trend-bar" style="height:35%;background:var(--sage-mid)"></div>
+        <div class="trend-bar" style="height:40%;background:var(--sage-mid)"></div>
+        <div class="trend-bar" style="height:50%;background:var(--sage-mid)"></div>
+        <div class="trend-bar" style="height:60%;background:var(--sage-mid)"></div>
+        <div class="trend-bar" style="height:55%;background:var(--sage-mid)"></div>
+        <div class="trend-bar" style="height:72%;background:var(--sage-mid)"></div>
+        <div class="trend-bar" style="height:68%;background:var(--sage-mid)"></div>
+        <div class="trend-bar" style="height:80%;background:var(--sage)"></div>
+      </div>
+      <div class="student-tags">
+        <span class="s-tag strength">S维度↑</span>
+        <span class="s-tag grow">解离识别</span>
+        <span class="s-tag attn">需关注</span>
+      </div>
+      <div class="student-last">最新记录："脑子空了"辨别困惑 <span>· 昨天</span></div>
+    </div>
+
+    <!-- 学员2 -->
+    <div class="student-card">
+      <div class="student-top">
+        <div class="student-avatar" style="background:#f0eaf8;color:var(--purple)">王</div>
+        <div><div class="student-name">王浩然</div><div class="student-sessions">已提交 11次</div></div>
+      </div>
+      <div class="mini-trend">
+        <div class="trend-bar" style="height:50%;background:#c8b8e8"></div>
+        <div class="trend-bar" style="height:58%;background:#c8b8e8"></div>
+        <div class="trend-bar" style="height:65%;background:#c8b8e8"></div>
+        <div class="trend-bar" style="height:70%;background:#c8b8e8"></div>
+        <div class="trend-bar" style="height:75%;background:#c8b8e8"></div>
+        <div class="trend-bar" style="height:80%;background:#c8b8e8"></div>
+        <div class="trend-bar" style="height:88%;background:#c8b8e8"></div>
+        <div class="trend-bar" style="height:92%;background:var(--purple)"></div>
+      </div>
+      <div class="student-tags">
+        <span class="s-tag strength">整合能力↑</span>
+        <span class="s-tag strength">M维度深</span>
+      </div>
+      <div class="student-last">最新记录：首次完成行为冲动的完成动作 <span>· 2天前</span></div>
+    </div>
+
+    <!-- 学员3 -->
+    <div class="student-card">
+      <div class="student-top">
+        <div class="student-avatar" style="background:var(--warm-light);color:var(--warm)">陈</div>
+        <div><div class="student-name">陈晓薇</div><div class="student-sessions">已提交 5次</div></div>
+      </div>
+      <div class="mini-trend">
+        <div class="trend-bar" style="height:30%;background:#e8c4a0"></div>
+        <div class="trend-bar" style="height:32%;background:#e8c4a0"></div>
+        <div class="trend-bar" style="height:28%;background:#e8c4a0"></div>
+        <div class="trend-bar" style="height:35%;background:#e8c4a0"></div>
+        <div class="trend-bar" style="height:40%;background:var(--warm)"></div>
+      </div>
+      <div class="student-tags">
+        <span class="s-tag grow">感觉词汇少</span>
+        <span class="s-tag grow">B维度待发展</span>
+      </div>
+      <div class="student-last">最新记录：描述仍以情绪为主，身体感觉模糊 <span>· 3天前</span></div>
+    </div>
+
+    <!-- 学员4 -->
+    <div class="student-card">
+      <div class="student-top">
+        <div class="student-avatar" style="background:#e8f4e8;color:#3b6d3b">赵</div>
+        <div><div class="student-name">赵明远</div><div class="student-sessions">已提交 9次</div></div>
+      </div>
+      <div class="mini-trend">
+        <div class="trend-bar" style="height:45%;background:#a8d4a8"></div>
+        <div class="trend-bar" style="height:50%;background:#a8d4a8"></div>
+        <div class="trend-bar" style="height:60%;background:#a8d4a8"></div>
+        <div class="trend-bar" style="height:65%;background:#a8d4a8"></div>
+        <div class="trend-bar" style="height:70%;background:#a8d4a8"></div>
+        <div class="trend-bar" style="height:78%;background:#a8d4a8"></div>
+        <div class="trend-bar" style="height:82%;background:#a8d4a8"></div>
+        <div class="trend-bar" style="height:76%;background:#3b8f3b"></div>
+        <div class="trend-bar" style="height:85%;background:#3b8f3b"></div>
+      </div>
+      <div class="student-tags">
+        <span class="s-tag strength">钟摆掌握好</span>
+        <span class="s-tag grow">意象整合</span>
+      </div>
+      <div class="student-last">最新记录：钟摆练习节奏感良好 <span>· 4天前</span></div>
+    </div>
+
+    <!-- 学员5 -->
+    <div class="student-card flagged">
+      <div class="student-top">
+        <div class="student-avatar" style="background:#fef0f0;color:#c0392b">刘</div>
+        <div><div class="student-name">刘雅婷</div><div class="student-sessions">已提交 3次</div></div>
+      </div>
+      <div class="mini-trend">
+        <div class="trend-bar" style="height:20%;background:#f5b8b0"></div>
+        <div class="trend-bar" style="height:18%;background:#f5b8b0"></div>
+        <div class="trend-bar" style="height:22%;background:#e05050"></div>
+      </div>
+      <div class="student-tags">
+        <span class="s-tag attn">高激活频繁</span>
+        <span class="s-tag attn">资源化弱</span>
+      </div>
+      <div class="student-last">最新记录：练习中出现强烈身体反应 <span>· 1天前</span></div>
+    </div>
+
+    <!-- 学员6 -->
+    <div class="student-card">
+      <div class="student-top">
+        <div class="student-avatar" style="background:#f0f4fb;color:#3b5ea8">张</div>
+        <div><div class="student-name">张伟航</div><div class="student-sessions">已提交 7次</div></div>
+      </div>
+      <div class="mini-trend">
+        <div class="trend-bar" style="height:55%;background:#b0c0f0"></div>
+        <div class="trend-bar" style="height:60%;background:#b0c0f0"></div>
+        <div class="trend-bar" style="height:62%;background:#b0c0f0"></div>
+        <div class="trend-bar" style="height:70%;background:#b0c0f0"></div>
+        <div class="trend-bar" style="height:75%;background:#b0c0f0"></div>
+        <div class="trend-bar" style="height:72%;background:#b0c0f0"></div>
+        <div class="trend-bar" style="height:80%;background:#3b5ea8"></div>
+      </div>
+      <div class="student-tags">
+        <span class="s-tag strength">A维度丰富</span>
+        <span class="s-tag strength">情绪流动↑</span>
+      </div>
+      <div class="student-last">最新记录：首次描述情绪的身体对应位置 <span>· 5天前</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 视图4：案例库 -->
+<div class="view" id="view-library">
+  <div class="submit-header">
+    <h2>教学案例库</h2>
+    <p>由真实督导记录匿名整理，可用于培训教学</p>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px;">
+    <button class="filter-btn active">全部</button>
+    <button class="filter-btn">冻结反应</button>
+    <button class="filter-btn">资源化</button>
+    <button class="filter-btn">钟摆技术</button>
+    <button class="filter-btn">解离识别</button>
+  </div>
+
+  <div class="case-library">
+    <div class="case-item">
+      <div class="case-badge freeze">冻结·解离</div>
+      <div class="case-content">
+        <div class="case-title">学员案例：如何辨别"脑子空了"是解离还是平静</div>
+        <div class="case-desc">学员在引导来访者做钟摆练习后，来访者报告"脑子空了"。学员不确定这是解离状态还是真正的调节后平静。AI分析标注了两种状态的身体信号差异，督导老师补充了快速测试方法。</div>
+        <div class="case-actions">
+          <button class="case-action primary">查看完整案例</button>
+          <button class="case-action">用于工作坊</button>
+          <button class="case-action">添加到课件</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-item">
+      <div class="case-badge resource">资源化</div>
+      <div class="case-content">
+        <div class="case-title">学员案例：建立资源感时身体出现矛盾感觉</div>
+        <div class="case-desc">学员尝试引导来访者建立"安全地方"的资源感，但来访者报告在想象安全场景时反而出现胸口发紧。S维度记录详细，展示了如何处理资源化过程中的阻力。</div>
+        <div class="case-actions">
+          <button class="case-action primary">查看完整案例</button>
+          <button class="case-action">用于工作坊</button>
+          <button class="case-action">添加到课件</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-item">
+      <div class="case-badge pendulate">钟摆技术</div>
+      <div class="case-content">
+        <div class="case-title">优质案例：学员掌握钟摆节奏的转折时刻</div>
+        <div class="case-desc">第9次记录中，学员首次能在不提示的情况下自主完成钟摆——在激活感受和资源感之间有节奏地移动注意力。S、B、A三个维度均有详细描述，是完整的钟摆觉察样本。</div>
+        <div class="case-actions">
+          <button class="case-action primary">查看完整案例</button>
+          <button class="case-action">用于工作坊</button>
+          <button class="case-action">添加到课件</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast 提示 -->
+<div class="toast" id="toast"></div>
+
+<script>
+  let isTeacher = false;
+
+  function switchView(viewId, tabEl) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('view-' + viewId).classList.add('active');
+    if (tabEl) tabEl.classList.add('active');
+  }
+
+  function toggleRole() {
+    isTeacher = !isTeacher;
+    const badge = document.getElementById('role-badge');
+    badge.textContent = isTeacher ? '督导老师视角' : '学员视角';
+    badge.className = 'role-badge ' + (isTeacher ? 'teacher' : 'student');
+    showToast(isTeacher ? '已切换到督导老师视角' : '已切换到学员视角');
+  }
+
+  function submitRecord() {
+    showToast('记录已提交，AI分析生成中…');
+    setTimeout(() => {
+      switchView('analysis', document.querySelectorAll('.nav-tab')[1]);
+    }, 1200);
+  }
+
+  function saveNote() {
+    showToast('督导批注已保存，已通知学员');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      this.closest('.filter-row, div').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
